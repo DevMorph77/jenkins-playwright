@@ -1,6 +1,5 @@
 pipeline {
-  agent any   // ✅ runs on Jenkins host, no Docker
-
+  agent any   // ✅ runs on Jenkins host (Windows), no Docker
 
   stages {
 
@@ -13,20 +12,20 @@ pipeline {
 
     stage('Install Playwright & Dependencies') {
       steps {
-        sh '''
-          echo "📦 Installing dependencies..."
-          npm ci || npm install
-          npx playwright install
-        '''
+        bat """
+          echo 📦 Installing dependencies...
+          call npm ci || call npm install
+          call npx playwright install
+        """
       }
     }
 
     stage('Run Playwright Tests') {
       steps {
-        sh '''
-          echo "🧪 Running Playwright tests and generating HTML report..."
-          npx playwright test --reporter=html
-        '''
+        bat """
+          echo 🧪 Running Playwright tests and generating HTML report...
+          call npx playwright test --reporter=html
+        """
       }
     }
 
@@ -36,7 +35,7 @@ pipeline {
           publishHTML(target: [
             allowMissing: false,
             alwaysLinkToLastBuild: true,
-            keepAll: false,    // ✅ replace old report each time
+            keepAll: false,   // ✅ replace old report each time
             reportDir: 'playwright-report',
             reportFiles: 'index.html',
             reportName: 'Playwright Test Report'
