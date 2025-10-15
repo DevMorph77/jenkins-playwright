@@ -1,56 +1,27 @@
 pipeline {
-  agent any   // ✅ run directly on Jenkins host
-
-  tools {
-    nodejs "NodeJS_20_LTS"   // make sure this is configured under Manage Jenkins → Tools
-  }
-
-  options {
-    timestamps()
-    ansiColor('xterm')
-  }
 
   stages {
-    stage('Checkout') {
+    stage('install playwright') {
       steps {
-        cleanWs()
-        git branch: 'main', url: 'https://github.com/DevMorph77/jenkins-playwright.git'
+        sh '''
+          npm i -D @playwright/test
+          npx playwright install
+        '''
       }
     }
-
-    stage('Install Dependencies') {
+    stage('help') {
       steps {
-        sh 'npm ci'
+        sh 'npx playwright test --help'
       }
     }
-
-    stage('Run Playwright Tests') {
+    stage('test') {
       steps {
-        sh 'npx playwright install --with-deps'
-        sh 'npx playwright test --reporter=html'
+        sh '''
+          npx playwright test --list
+          npx playwright test
+        '''
       }
-    }
-
-    stage('Publish Report') {
-      steps {
-        script {
-          publishHTML(target: [
-            allowMissing: false,
-            alwaysLinkToLastBuild: true,
-            keepAll: false,  // ✅ replace old report each build
-            reportDir: 'playwright-report',
-            reportFiles: 'index.html',
-            reportName: 'Playwright Test Report'
-          ])
-        }
-      }
-    }
-  }
-
-  post {
-    always {
-      archiveArtifacts artifacts: 'playwright-report/**/*.*', onlyIfSuccessful: true
-      echo "✅ Build complete. New Playwright report published."
+     
     }
   }
 }
