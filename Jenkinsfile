@@ -1,9 +1,7 @@
 pipeline {
   agent any   // ✅ runs on Jenkins host, no Docker
 
-  tools {
-    nodejs "NodeJS_20_LTS"   // ⚙️ configured under Manage Jenkins → Tools
-  }
+  tools any
 
 
   stages {
