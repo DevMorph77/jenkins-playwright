@@ -1,8 +1,6 @@
 pipeline {
   agent any   // ✅ runs on Jenkins host, no Docker
 
-  tools any
-
 
   stages {
 
