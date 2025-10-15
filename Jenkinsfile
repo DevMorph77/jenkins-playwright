@@ -1,18 +1,13 @@
 pipeline {
-  agent {
-    docker {
-      image 'mcr.microsoft.com/playwright:v1.47.1-jammy'
-      args '-u root:root'
-    }
-  }
+  agent any   // ✅ run directly on Jenkins host
 
   tools {
-    nodejs "NodeJS_20_LTS"
+    nodejs "NodeJS_20_LTS"   // make sure this is configured under Manage Jenkins → Tools
   }
 
   options {
-    ansiColor('xterm')
     timestamps()
+    ansiColor('xterm')
   }
 
   stages {
@@ -31,6 +26,7 @@ pipeline {
 
     stage('Run Playwright Tests') {
       steps {
+        sh 'npx playwright install --with-deps'
         sh 'npx playwright test --reporter=html'
       }
     }
@@ -41,7 +37,7 @@ pipeline {
           publishHTML(target: [
             allowMissing: false,
             alwaysLinkToLastBuild: true,
-            keepAll: false,   // ✅ replace old report each time
+            keepAll: false,  // ✅ replace old report each build
             reportDir: 'playwright-report',
             reportFiles: 'index.html',
             reportName: 'Playwright Test Report'
@@ -54,7 +50,7 @@ pipeline {
   post {
     always {
       archiveArtifacts artifacts: 'playwright-report/**/*.*', onlyIfSuccessful: true
-      echo "✅ Build complete. Previous report replaced with the latest one."
+      echo "✅ Build complete. New Playwright report published."
     }
   }
 }
