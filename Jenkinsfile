@@ -1,5 +1,5 @@
 pipeline {
-  agent any   // ✅ runs on Jenkins host (Windows), no Docker
+  agent any
 
   stages {
 
@@ -32,13 +32,15 @@ pipeline {
     stage('Publish Playwright Report') {
       steps {
         script {
-          publishHTML(target: [
-            allowMissing: false,
-            alwaysLinkToLastBuild: true,
-            keepAll: false,   // ✅ replace old report each time
+          sleep(time: 3, unit: 'SECONDS') // ✅ wait briefly
+          bat 'dir playwright-report'     // ✅ confirm directory
+          publishHTML([
             reportDir: 'playwright-report',
             reportFiles: 'index.html',
-            reportName: 'Playwright Test Report'
+            reportName: 'Playwright Test Report',
+            alwaysLinkToLastBuild: true,
+            keepAll: true,
+            includes: '**/*'
           ])
         }
       }
