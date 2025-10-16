@@ -6,6 +6,7 @@ pipeline {
     stage('Checkout') {
       steps {
         cleanWs()
+        echo "🧹 Workspace cleaned. Checking out latest code..."
         git branch: 'main', url: 'https://github.com/DevMorph77/jenkins-playwright.git'
       }
     }
@@ -32,16 +33,24 @@ pipeline {
     stage('Publish Playwright Report') {
       steps {
         script {
-          sleep(time: 3, unit: 'SECONDS') // ✅ wait briefly
-          bat 'dir playwright-report'     // ✅ confirm directory
-          publishHTML([
-            reportDir: 'playwright-report',
-            reportFiles: 'index.html',
-            reportName: 'Playwright Test Report',
-            alwaysLinkToLastBuild: true,
-            keepAll: true,
-            includes: '**/*'
-          ])
+          echo "🧾 Checking if Playwright report folder exists..."
+          def reportPath = "playwright-report"
+          // Check if folder exists before publishing
+          if (fileExists(reportPath)) {
+            echo "✅ Report folder found. Publishing HTML report..."
+            bat "dir ${reportPath}"
+
+            publishHTML([
+              reportDir: reportPath,
+              reportFiles: 'index.html',
+              reportName: 'Playwright Test Report',
+              alwaysLinkToLastBuild: true,
+              keepAll: true,
+              includes: '**/*'
+            ])
+          } else {
+            echo "⚠️ No Playwright report found — skipping HTML publish."
+          }
         }
       }
     }
@@ -49,11 +58,23 @@ pipeline {
 
   post {
     success {
+      echo "✅ Build successful — archiving Playwright report..."
       archiveArtifacts artifacts: 'playwright-report/**/*.*', fingerprint: true
-      echo "✅ Build successful — Playwright report archived and published."
+      echo "📊 Report archived and published successfully."
     }
     failure {
-      echo "❌ Tests failed — check console output for details."
+      echo "❌ Tests failed — check console output and ensure the report is generated."
+      script {
+        if (fileExists('playwright-report')) {
+          echo "📁 Archiving failed test report for inspection..."
+          archiveArtifacts artifacts: 'playwright-report/**/*.*', fingerprint: true
+        } else {
+          echo "⚠️ No report folder found after failure — nothing to archive."
+        }
+      }
+    }
+    always {
+      echo "🏁 Pipeline finished. Check Jenkins console and HTML reports for details."
     }
   }
 }
